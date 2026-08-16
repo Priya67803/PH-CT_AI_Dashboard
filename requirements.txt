@@ -1,0 +1,11 @@
+flask
+torch
+torchvision
+grad-cam
+opencv-python
+pillow
+numpy
+matplotlib
+seaborn
+plotly
+hashlib

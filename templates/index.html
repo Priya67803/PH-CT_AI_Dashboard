@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroPulse Clinical Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Fonts & Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Chart Plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <!-- Modern Sidebar -->
+        <aside class="sidebar glass-panel">
+            <div class="brand">
+                <i class="ri-lungs-fill text-gradient" style="font-size: 2.2rem;"></i>
+                <h2>Neuro<span class="text-gradient">Pulse</span></h2>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-link active" onclick="switchTab('dashboard')">
+                    <i class="ri-dashboard-fill"></i> Clinical AI Core
+                </button>
+                <button class="nav-link" onclick="switchTab('dataset')">
+                    <i class="ri-database-2-fill"></i> Dataset Overview
+                </button>
+            </nav>
+
+
+            <div class="system-status"
+                style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <i class="ri-server-fill pulse-icon" style="color: #4ade80;"></i>
+                <span>Backend: Online</span>
+            </div>
+
+            <button class="logout-btn" onclick="alert('Session Terminated. Logging out...'); location.reload();"
+                style="background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; transition: all 0.3s; margin-top: 15px;">
+                <i class="ri-lock-unlock-line"></i> Secure Logout
+            </button>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
+            <header class="top-header glass-panel">
+                <div class="header-titles">
+                    <h1 class="main-title" id="pageTitle">PH-CT Live Diagnostics</h1>
+                    <p class="sub-title" id="pageSub">Real-time pulmonary hypertension classification engine.</p>
+                </div>
+            </header>
+
+            <!-- TAB 1: Clinical Dashboard -->
+            <section id="tab-dashboard" class="tab-pane active-pane">
+
+                <!-- Horizontal Control Banner -->
+                <div class="glass-panel"
+                    style="display: flex; gap: 20px; align-items: center; padding: 20px; margin-bottom: 15px;">
+                    <div class="drag-drop-zone" id="dropZone"
+                        style="flex: 1; margin: 0; padding: 15px; display: flex; align-items: center; gap: 20px; text-align: left; background: rgba(0,0,0,0.4); border-radius: 8px;">
+                        <input type="file" id="imageUpload" accept="image/png, image/jpeg, image/jpg"
+                            style="display: none;">
+                        <i class="ri-file-upload-line" style="font-size: 2.5rem; color: var(--accent);"></i>
+                        <div>
+                            <h4 style="margin-bottom: 2px; font-size: 1rem;">Upload Patient CT Scan</h4>
+                            <p style="font-size: 0.8rem; margin: 0;">Drag & drop or click to browse filesystem</p>
+                        </div>
+                    </div>
+
+                    <div class="control-group" style="flex: 1; margin: 0;">
+                        <label style="color: white; font-weight: 600; margin-bottom: 8px;">Active Diagnostic
+                            Architecture</label>
+                        <div class="select-wrapper">
+                            <select class="custom-select" id="modelSelect"
+                                style="background: rgba(0,0,0,0.4); font-size: 1rem;">
+                                <option value="densenet">DenseNet121 V2 (Baseline Engine)</option>
+                                <option value="yolo">YOLOv8 + Graph Net (Hybrid Pipeline)</option>
+                            </select>
+                            <i class="ri-arrow-down-s-line select-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-container top-grid">
+
+                    <!-- Advanced Interactive Dropzone -->
+                    <div class="viewer-section glass-panel">
+                        <div class="section-header">
+                            <h3><i class="ri-scan-2-line"></i> Patient Scan Analysis</h3>
+                        </div>
+
+
+                        <div class="dual-viewer-container">
+                            <div class="viewer-box">
+                                <h4 class="viewer-title">Input Tensor</h4>
+                                <div class="mock-ct-scan" id="originalViewer">
+                                    <span class="viewer-placeholder"><i class="ri-image-add-line"></i></span>
+                                </div>
+                            </div>
+                            <div class="viewer-box">
+                                <h4 class="viewer-title">GradCAM++ Attention</h4>
+                                <div class="mock-ct-scan" id="gradcamViewer">
+                                    <span class="viewer-placeholder"><i class="ri-radar-line"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="primary-btn pulse-glow" id="runPipelineBtn">
+                            <i class="ri-flashlight-fill"></i> INITIALIZE PIPELINE
+                        </button>
+                    </div>
+
+                    <!-- Metrics Section -->
+                    <div class="metrics-section">
+                        <div class="section-header" style="margin-bottom: 20px;">
+                            <h3><i class="ri-dashboard-3-line"></i> AI Metrics Dashboard</h3>
+                        </div>
+
+                        <div class="result-card glass-panel" id="resultCard" style="display: none;">
+                            <div class="result-header">
+                                <div class="result-icon"><i class="ri-stethoscope-fill"></i></div>
+                                <div>
+                                    <p class="label">Primary Diagnosis</p>
+                                    <h2 class="prediction-text" id="predText">---</h2>
+                                </div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="confBar" style="width: 0%;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <p class="confidence" id="confContainer">Probability Matrix: <strong id="confText"
+                                        class="text-gradient">-%</strong></p>
+                                <span style="font-size: 0.8rem; color: #a1a1aa; align-self: flex-end;">Softmax
+                                    Map</span>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid" id="statsGrid">
+                            <div class="stat-box glass-panel">
+                                <i class="ri-focus-2-line stat-icon"></i>
+                                <span>Validation Acc.</span>
+                                <strong id="statAcc">--</strong>
+                            </div>
+                            <div class="stat-box glass-panel">
+                                <i class="ri-bar-chart-grouped-line stat-icon"></i>
+                                <span>Global F1 Score</span>
+                                <strong id="statF1">--</strong>
+                            </div>
+                            <div class="stat-box glass-panel">
+                                <i class="ri-funds-line stat-icon"></i>
+                                <span>AUC-ROC</span>
+                                <strong id="statRoc">--</strong>
+                            </div>
+                            <div class="stat-box glass-panel">
+                                <i class="ri-timer-flash-line stat-icon"></i>
+                                <span>Terminal Latency</span>
+                                <strong id="statTime">--</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Analytics Grid -->
+                <div class="grid-container bottom-grid">
+                    <div class="chart-box glass-panel">
+                        <h4>Training Convergence</h4>
+                        <div class="mock-chart">
+                            <div class="chart-placeholder" id="placeholder-loss"><i class="ri-line-chart-line"></i>
+                            </div>
+                            <canvas id="chart-loss" style="display: none; height: 100%; width: 100%;"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box glass-panel">
+                        <h4>ROC Validation Space</h4>
+                        <div class="mock-chart">
+                            <div class="chart-placeholder" id="placeholder-roc"><i class="ri-bubble-chart-line"></i>
+                            </div>
+                            <canvas id="chart-roc" style="display: none; height: 100%; width: 100%;"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box glass-panel">
+                        <h4>Confusion Matrix</h4>
+                        <div class="mock-chart" style="padding: 0; position: relative;">
+                            <div class="chart-placeholder" id="placeholder-cm"><i class="ri-grid-fill"></i></div>
+                            <div id="chart-cm" style="width: 100%; height: 100%; display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: Dataset Overview -->
+            <section id="tab-dataset" class="tab-pane" style="display: none;">
+                <div class="glass-panel"
+                    style="padding: 30px; margin-bottom: 20px; border-left: 4px solid var(--accent);">
+                    <h2>Pulmonary Hypertension CT Database (PH-CT-V1)</h2>
+                    <p style="color: #a1a1aa; margin-top: 10px; line-height: 1.6; font-size: 1.1rem;">
+                        A heavily curated, multi-class high-resolution medical imaging dataset targeting progressive
+                        stages of Pulmonary Hypertension. Used inherently for deploying state-of-the-art vision models
+                        via Kaggle's <code>turkertuncer/ph-ct-v1</code> repository.
+                    </p>
+                </div>
+
+                <div class="dataset-stats-grid">
+                    <div class="ds-card glass-panel">
+                        <i class="ri-image-2-fill ds-icon" style="color: #4ade80;"></i>
+                        <div class="ds-info">
+                            <h3>Total Scans</h3>
+                            <strong>3,200+</strong>
+                        </div>
+                    </div>
+                    <div class="ds-card glass-panel">
+                        <i class="ri-layout-grid-fill ds-icon" style="color: #60a5fa;"></i>
+                        <div class="ds-info">
+                            <h3>Diagnostic Classes</h3>
+                            <strong>4 Distinct Levels</strong>
+                        </div>
+                    </div>
+                    <div class="ds-card glass-panel">
+                        <i class="ri-4k-line ds-icon" style="color: #facc15;"></i>
+                        <div class="ds-info">
+                            <h3>Spatial Resolution</h3>
+                            <strong>512x512 PNG</strong>
+                        </div>
+                    </div>
+                    <div class="ds-card glass-panel">
+                        <i class="ri-hospital-line ds-icon" style="color: #f472b6;"></i>
+                        <div class="ds-info">
+                            <h3>Modality</h3>
+                            <strong>Thoracic CT Arrays</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel" style="padding: 30px;">
+                    <h3 style="margin-bottom: 20px;"><i class="ri-git-merge-line"></i> Extracted Diagnostic Classes</h3>
+                    <div class="classes-container">
+                        <div class="class-item">
+                            <div class="class-color" style="background: #4ade80;"></div>
+                            <div class="class-details">
+                                <h4>Normal Baseline (0)</h4>
+                                <p>Healthy physiological organ states containing normal parenchymal attenuation.</p>
+                            </div>
+                        </div>
+                        <div class="class-item">
+                            <div class="class-color" style="background: #facc15;"></div>
+                            <div class="class-details">
+                                <h4>Mild PH (1)</h4>
+                                <p>Subtle artery dilatation and marginal vessel-to-bronchus ratio scaling.</p>
+                            </div>
+                        </div>
+                        <div class="class-item">
+                            <div class="class-color" style="background: #fb923c;"></div>
+                            <div class="class-details">
+                                <h4>Severe PH (2)</h4>
+                                <p>Major main pulmonary artery (MPA) enlargement extending heavily through structures.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="class-item">
+                            <div class="class-color" style="background: #ff4757;"></div>
+                            <div class="class-details">
+                                <h4>Critical Failure (3)</h4>
+                                <p>End-stage right ventricular hypertrophy, pericardial effusion present.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Hidden Scripts -->
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+
+            document.getElementById('tab-' + tab).style.display = 'block';
+            event.currentTarget.classList.add('active');
+
+            if (tab === 'dashboard') {
+                document.getElementById('pageTitle').textContent = 'PH-CT Live Diagnostics';
+                document.getElementById('pageSub').textContent = 'Real-time pulmonary hypertension classification engine.';
+            } else {
+                document.getElementById('pageTitle').textContent = 'Kaggle Dataset Hub';
+                document.getElementById('pageSub').textContent = 'Comprehensive intelligence mapping for PH-CT-V1.';
+            }
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>
