@@ -4,6 +4,7 @@ import random
 import io
 import base64
 import hashlib
+import os
 import numpy as np
 import cv2
 from PIL import Image
@@ -183,6 +184,6 @@ def run_analysis():
     })
 
 if __name__ == '__main__':
-    print("[*] Starting NeuroPulse PH-CT AI Dashboard...")
-    print("[-] Open your browser and go to http://127.0.0.1:7860")
-    app.run(host='0.0.0.0', port=7860, debug=False)
+    port = int(os.environ.get('PORT', 7860))
+    print(f"[*] Starting NeuroPulse PH-CT AI Dashboard on port {port}...")
+    app.run(host='0.0.0.0', port=port, debug=False)

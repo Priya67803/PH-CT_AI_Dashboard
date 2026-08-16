@@ -1,8 +1,5 @@
 flask
-torch
-torchvision
-grad-cam==1.5.5
-opencv-python
+opencv-python-headless
 pillow
 numpy
 matplotlib
