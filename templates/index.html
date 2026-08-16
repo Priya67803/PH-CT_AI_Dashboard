@@ -17,6 +17,13 @@
 </head>
 
 <body>
+    <!-- Hamburger button (mobile only) -->
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open navigation">
+        <i class="ri-menu-3-line"></i>
+    </button>
+    <!-- Sidebar overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <div class="dashboard-layout">
         <!-- Modern Sidebar -->
         <aside class="sidebar glass-panel">
@@ -61,8 +68,7 @@
             <section id="tab-dashboard" class="tab-pane active-pane">
 
                 <!-- Horizontal Control Banner -->
-                <div class="glass-panel"
-                    style="display: flex; gap: 20px; align-items: center; padding: 20px; margin-bottom: 15px;">
+                <div class="glass-panel control-banner">
                     <div class="drag-drop-zone" id="dropZone"
                         style="flex: 1; margin: 0; padding: 15px; display: flex; align-items: center; gap: 20px; text-align: left; background: rgba(0,0,0,0.4); border-radius: 8px;">
                         <input type="file" id="imageUpload" accept="image/png, image/jpeg, image/jpg"
@@ -279,6 +285,33 @@
 
     <!-- Hidden Scripts -->
     <script>
+        // --- MOBILE SIDEBAR TOGGLE ---
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function openSidebar() {
+            sidebar.classList.add('open');
+            sidebarOverlay.classList.add('active');
+            hamburgerBtn.innerHTML = '<i class="ri-close-line"></i>';
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+            hamburgerBtn.innerHTML = '<i class="ri-menu-3-line"></i>';
+        }
+
+        if (hamburgerBtn) {
+            hamburgerBtn.addEventListener('click', () => {
+                sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', closeSidebar);
+        }
+
         function switchTab(tab) {
             document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
@@ -293,6 +326,9 @@
                 document.getElementById('pageTitle').textContent = 'Kaggle Dataset Hub';
                 document.getElementById('pageSub').textContent = 'Comprehensive intelligence mapping for PH-CT-V1.';
             }
+
+            // Close sidebar on mobile after navigation
+            if (window.innerWidth <= 768) closeSidebar();
         }
     </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
